@@ -45,10 +45,10 @@ public class CommunicationActivity extends BasActivity {
     public static final int FRAGMENT_STATE_SEND_SEND_TITLE = 0x09;
     public static final int FRAGMENT_STATE_LOG_MESSAGE = 0x011;
 
-    private final String CONNECTED = "已连接",CONNECTING = "连接中",DISCONNECT = "断线了";
+    private final String CONNECTED = "已连接", CONNECTING = "连接中", DISCONNECT = "断线了";
 
-    @ViewByIds(value = {R.id.one},name = {"mMessTV"})
-    private UnderlineTextView mMessTV,mLogTV,mCustomTV,mOtherTV;//四个滑动标题
+    @ViewByIds(value = {R.id.one}, name = {"mMessTV"})
+    private UnderlineTextView mMessTV, mLogTV, mCustomTV, mOtherTV;//四个滑动标题
 
     private UnderlineTextView mUnderlineTV;//滑动标题暂存
 
@@ -85,15 +85,14 @@ public class CommunicationActivity extends BasActivity {
         @Override
         public boolean handleMessage(@NonNull Message msg) {
             FragmentMessageItem item = (FragmentMessageItem) msg.obj;
-            mHoldBluetooth.sendData(item.getModule(),item.getByteData().clone());
+            mHoldBluetooth.sendData(item.getModule(), item.getByteData().clone());
             return false;
         }
     });
 
 
-
     @OnClick({R.id.one})
-    private void onClick(View view){
+    private void onClick(View view) {
         //把这个按钮，触发点击事件，并存下到mUnderlineTV中，等下次触发另外按钮时，再复位所保存的按钮
         UnderlineTextView underlineTextView = (UnderlineTextView) view;
         if (mUnderlineTV != null)
@@ -101,7 +100,7 @@ public class CommunicationActivity extends BasActivity {
         underlineTextView.setState(true);
         mUnderlineTV = underlineTextView;
 
-        switch (view.getId()){
+        switch (view.getId()) {
             case R.id.one:
                 mViewPager.setCurrentItem(0);
                 break;
@@ -120,7 +119,7 @@ public class CommunicationActivity extends BasActivity {
         mMessage.setHandler(mFragmentHandler);
 
         //传过去头部，主要是为了获取连接状况
-        mMessage.readData(FRAGMENT_STATE_SEND_SEND_TITLE,mTitle,null);
+        mMessage.readData(FRAGMENT_STATE_SEND_SEND_TITLE, mTitle, null);
         if (mHoldBluetooth.isDevelopmentMode()) {
             mLogTV.setVisibility(View.VISIBLE);
         }
@@ -133,8 +132,7 @@ public class CommunicationActivity extends BasActivity {
                     mUnderlineTV.setState(false);
 
 
-
-                switch (position){
+                switch (position) {
                     case 0:
                         mUnderlineTV = mMessTV.setState(true);
                         break;
@@ -175,7 +173,7 @@ public class CommunicationActivity extends BasActivity {
                 modules = mHoldBluetooth.getConnectedArray();
                 mMessage.readData(FRAGMENT_STATE_DATA, modules.get(0), null);
                 setState(CONNECTED);//设置连接状态
-                log("连接成功: "+modules.get(0).getName());
+                log("连接成功: " + modules.get(0).getName());
             }
 
             @Override
@@ -189,7 +187,7 @@ public class CommunicationActivity extends BasActivity {
                                 mHoldBluetooth.connect(deviceModule);
                                 setState(CONNECTING);//设置正在连接状态
                             }
-                        },2000);
+                        }, 2000);
                         return;
                     }
                 }
@@ -218,25 +216,25 @@ public class CommunicationActivity extends BasActivity {
             @Override
             public void onClick(View v) {
                 String str = ((TextView) v).getText().toString();
-                if (str.equals(CONNECTED)){
+                if (str.equals(CONNECTED)) {
                     if (modules != null && mHoldBluetooth != null) {
                         mHoldBluetooth.tempDisconnect(modules.get(0));
                         setState(DISCONNECT);//设置断线状态
                     }
-                }else if (str.equals(DISCONNECT)){
-                    if ((modules != null || mErrorDisconnect != null) && mHoldBluetooth != null){
-                        mHoldBluetooth.connect(modules!= null&&modules.get(0)!=null?modules.get(0):mErrorDisconnect);
+                } else if (str.equals(DISCONNECT)) {
+                    if ((modules != null || mErrorDisconnect != null) && mHoldBluetooth != null) {
+                        mHoldBluetooth.connect(modules != null && modules.get(0) != null ? modules.get(0) : mErrorDisconnect);
                         log("开启连接动画..");
                         setState(CONNECTING);//设置正在连接状态
-                    }else {
-                        toast("连接失败...",Toast.LENGTH_SHORT);
+                    } else {
+                        toast("连接失败...", Toast.LENGTH_SHORT);
                         setState(DISCONNECT);//设置断线状态
                     }
                 }
             }
         };
         mTitle = new DefaultNavigationBar
-                .Builder(this,(ViewGroup)findViewById(R.id.communication_name))
+                .Builder(this, (ViewGroup) findViewById(R.id.communication_name))
                 .setTitle("蓝牙助手")
                 .setRightText(CONNECTING)
                 .setRightClickListener(listener)
@@ -244,8 +242,8 @@ public class CommunicationActivity extends BasActivity {
         mTitle.updateLoadingState(true);
     }
 
-    private void setState(String state){
-        switch (state){
+    private void setState(String state) {
+        switch (state) {
             case CONNECTED://连接成功
                 mTitle.updateRight(CONNECTED);
                 mErrorDisconnect = null;

@@ -112,7 +112,7 @@ public class FragmentMessage extends BasFragment {
         }
     }
 
-    private boolean isShowAlarm = false;
+    private boolean isShowAlarm = true;
 
     @Override
     public void readData(int state, Object o, final byte[] data) {
@@ -122,33 +122,40 @@ public class FragmentMessage extends BasFragment {
                     module = (DeviceModule) o;
                 }
                 if (data != null) {
-                    new Handler().postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            String byteToString = Analysis.getByteToString(data, isReadHex);
-                            String[] split = byteToString.split(",");
-                            String ir = split[0].split("=")[1];
-                            String bmp = split[1].split("=")[1];
-                            String avgBmp = split[2].split("=")[1];
+                    try {
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                String byteToString = Analysis.getByteToString(data, isReadHex);
+                                String[] split = byteToString.split(",");
+                                String ir = split[0].split("=")[1];
+                                String bmp = split[1].split("=")[1];
+                                String avgBmp = split[2].split("=")[1];
 
-                            tvIr.setText("血氧：" + ir);
-                            tvBMp.setText("平均心率：" + avgBmp);
-                            double i = Double.parseDouble(ir);//血氧
-                            double i1 = Double.parseDouble(bmp);//心率
-                            double i2 = Double.parseDouble(avgBmp);//平均心率
-                            if (i > 70 || i2 < 60 || i2 > 110) {
-                                if (isShowAlarm) {
-                                    new Handler().postDelayed(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            startActivity(new Intent(getContext(), AlarmActivity.class));
-                                        }
-                                    }, 10000);
+                                tvIr.setText("血氧：" + ir);
+                                tvBMp.setText("平均心率：" + avgBmp);
+                                double i = Double.parseDouble(ir);//血氧
+                                double i1 = Double.parseDouble(bmp);//心率
+                                double i2 = Double.parseDouble(avgBmp);//平均心率
+                                if (i > 70 || i2 < 60 || i2 > 110) {
+                                    if (isShowAlarm) {
+                                        new Handler().postDelayed(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                isShowAlarm = false;
+                                                startActivity(new Intent(getContext(), AlarmActivity.class));
+                                                startCountTimer();
+                                            }
+                                        }, 10000);
+                                    }
+
                                 }
-
                             }
-                        }
-                    }, 2000);
+                        }, 2000);
+                    } catch (Exception e) {
+                        //    throw new IllegalStateException(Analysis.getByteToString(data, isReadHex));
+
+                    }
 
 
                 }
@@ -164,6 +171,22 @@ public class FragmentMessage extends BasFragment {
 
     }
 
+    public void startCountTimer() {
+        new CountDownTimer(10 * 60 * 1000, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                if (millisUntilFinished == 0) {
+                    isShowAlarm = true;
+                }
+            }
+
+            @Override
+            public void onFinish() {
+                isShowAlarm = true;
+            }
+        }.start();
+    }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -175,13 +198,11 @@ public class FragmentMessage extends BasFragment {
     @Override
     public void onResume() {
         super.onResume();
-        isShowAlarm = true;
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        isShowAlarm = false;
     }
 
     @OnClick({R.id.pull_message_fragment})

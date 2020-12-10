@@ -32,7 +32,6 @@ public abstract class BasActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Thread.currentThread().setUncaughtExceptionHandler(new MyUncaughtExceptionHandler());
     }
 
     private class MyUncaughtExceptionHandler implements Thread.UncaughtExceptionHandler {

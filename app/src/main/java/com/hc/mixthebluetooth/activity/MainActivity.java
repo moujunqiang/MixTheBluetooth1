@@ -7,6 +7,7 @@ import android.os.Bundle;
 
 import android.os.Handler;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -101,35 +102,35 @@ public class MainActivity extends BasActivity {
         mHoldBluetooth = HoldBluetooth.getInstance();
         final HoldBluetooth.UpdateList updateList = new HoldBluetooth.UpdateList() {
             @Override
-            public void update(boolean isStart,DeviceModule deviceModule) {
-                if (isStart){
-                    log("回调数据..","w");
+            public void update(boolean isStart, DeviceModule deviceModule) {
+                if (isStart) {
+                    log("回调数据..", "w");
                     setMainBackIcon();
                     mModuleArray.add(deviceModule);
-                    addFilterList(deviceModule,true);
-                }else {
+                    addFilterList(deviceModule, true);
+                } else {
                     mTitle.updateLoadingState(false);
                 }
             }
 
             @Override
             public void updateMessyCode(boolean isStart, DeviceModule deviceModule) {
-                for(int i= 0; i<mModuleArray.size();i++){
-                    if (mModuleArray.get(i).getMac().equals(deviceModule.getMac())){
+                for (int i = 0; i < mModuleArray.size(); i++) {
+                    if (mModuleArray.get(i).getMac().equals(deviceModule.getMac())) {
                         mModuleArray.remove(mModuleArray.get(i));
-                        mModuleArray.add(i,deviceModule);
+                        mModuleArray.add(i, deviceModule);
                         upDateList();
                         break;
                     }
                 }
             }
         };
-        mHoldBluetooth.initHoldBluetooth(MainActivity.this,updateList);
+        mHoldBluetooth.initHoldBluetooth(MainActivity.this, updateList);
     }
 
     private void initView() {
         setMainBackIcon();
-        mainRecyclerAdapter = new MainRecyclerAdapter(this,mFilterModuleArray,R.layout.item_recycler_main);
+        mainRecyclerAdapter = new MainRecyclerAdapter(this, mFilterModuleArray, R.layout.item_recycler_main);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         mRecyclerView.setAdapter(mainRecyclerAdapter);
     }
@@ -146,8 +147,8 @@ public class MainActivity extends BasActivity {
     }
 
     //刷新的具体实现
-    private void refresh(){
-        if (mHoldBluetooth.scan(mStorage.getData(PopWindowMain.BLE_KEY))){
+    private void refresh() {
+        if (mHoldBluetooth.scan(mStorage.getData(PopWindowMain.BLE_KEY))) {
             mModuleArray.clear();
             mFilterModuleArray.clear();
             mTitle.updateLoadingState(true);
@@ -155,19 +156,19 @@ public class MainActivity extends BasActivity {
     }
 
     //根据条件过滤列表，并选择是否更新列表
-    private void addFilterList(DeviceModule deviceModule,boolean isRefresh){
-        if (mStorage.getData(PopWindowMain.NAME_KEY)){
+    private void addFilterList(DeviceModule deviceModule, boolean isRefresh) {
+        if (mStorage.getData(PopWindowMain.NAME_KEY)) {
             if (deviceModule.getName().equals("N/A"))
                 return;
         }
 
-        if (mStorage.getData(PopWindowMain.BLE_KEY)){
+        if (mStorage.getData(PopWindowMain.BLE_KEY)) {
             if (!deviceModule.isBLE())
                 return;
         }
 
-        if (mStorage.getData(PopWindowMain.FILTER_KEY) || mStorage.getData(PopWindowMain.CUSTOM_KEY)){
-            if (!deviceModule.isHcModule(mStorage.getData(PopWindowMain.CUSTOM_KEY),mStorage.getDataString(PopWindowMain.DATA_KEY)))
+        if (mStorage.getData(PopWindowMain.FILTER_KEY) || mStorage.getData(PopWindowMain.CUSTOM_KEY)) {
+            if (!deviceModule.isHcModule(mStorage.getData(PopWindowMain.CUSTOM_KEY), mStorage.getDataString(PopWindowMain.DATA_KEY)))
                 return;
         }
         deviceModule.isCollectName(MainActivity.this);
@@ -179,7 +180,7 @@ public class MainActivity extends BasActivity {
     //设置头部
     private void setTitle() {
         mTitle = new DefaultNavigationBar
-                .Builder(this,(ViewGroup)findViewById(R.id.main_name))
+                .Builder(this, (ViewGroup) findViewById(R.id.main_name))
                 .setLeftText("蓝牙助手")
                 .hideLeftIcon()
                 .setRightIcon()
@@ -194,12 +195,12 @@ public class MainActivity extends BasActivity {
     }
 
     //头部下拉窗口
-    private void setPopWindow(View v){
+    private void setPopWindow(View v) {
         new PopWindowMain(v, MainActivity.this, new PopWindowMain.DismissListener() {
             @Override
             public void onDismissListener() {//弹出窗口销毁的回调
-               upDateList();
-               mTitle.updateRightImage(false);
+                upDateList();
+                mTitle.updateRightImage(false);
             }
         });
     }
@@ -209,10 +210,10 @@ public class MainActivity extends BasActivity {
         mainRecyclerAdapter.setOnItemClickListener(new ItemClickListener() {
             @Override
             public void onItemClick(int position, View view) {
-                log("viewId:"+view.getId()+" item_main_icon:"+R.id.item_main_icon);
-                if (view.getId() == R.id.item_main_icon){
+                log("viewId:" + view.getId() + " item_main_icon:" + R.id.item_main_icon);
+                if (view.getId() == R.id.item_main_icon) {
                     setCollectWindow(position);//收藏窗口
-                }else {
+                } else {
                     mHoldBluetooth.setDevelopmentMode(MainActivity.this);//设置是否进入开发模式
                     mHoldBluetooth.connect(mFilterModuleArray.get(position));
                     startActivity(CommunicationActivity.class);
@@ -237,26 +238,26 @@ public class MainActivity extends BasActivity {
     }
 
     //更新列表
-    private void upDateList(){
+    private void upDateList() {
         mFilterModuleArray.clear();
         for (DeviceModule deviceModule : mModuleArray) {
-            addFilterList(deviceModule,false);
+            addFilterList(deviceModule, false);
         }
         mainRecyclerAdapter.notifyDataSetChanged();
         setMainBackIcon();
     }
 
     //设置列表的背景图片是否显示
-    private void setMainBackIcon(){
-        if (mFilterModuleArray.size() == 0){
+    private void setMainBackIcon() {
+        if (mFilterModuleArray.size() == 0) {
             mNotBluetooth.setVisibility(View.VISIBLE);
-        }else {
+        } else {
             mNotBluetooth.setVisibility(View.GONE);
         }
     }
 
     //初始化位置权限
-    private void initPermission(){
+    private void initPermission() {
         PermissionUtil.requestEach(MainActivity.this, new PermissionUtil.OnPermissionListener() {
             @Override
             public void onSucceed() {
@@ -265,26 +266,27 @@ public class MainActivity extends BasActivity {
                 new Handler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        if (mHoldBluetooth.bluetoothState()){
+                        if (mHoldBluetooth.bluetoothState()) {
                             if (Analysis.isOpenGPS(MainActivity.this))
                                 refresh();
                             else
                                 startLocation();
                         }
                     }
-                },1000);
+                }, 1000);
 
             }
+
             @Override
             public void onFailed(boolean showAgain) {
-                log("失败","e");
+                log("失败", "e");
             }
         }, PermissionUtil.LOCATION);
     }
 
     //开启位置权限
-    private void startLocation(){
-        AlertDialog.Builder builder = new AlertDialog.Builder(this,AlertDialog.THEME_DEVICE_DEFAULT_LIGHT);
+    private void startLocation() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, AlertDialog.THEME_DEVICE_DEFAULT_LIGHT);
         builder.setTitle("提示")
                 .setMessage("请前往打开手机的位置权限!")
                 .setCancelable(false)

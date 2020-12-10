@@ -183,15 +183,6 @@ public class MainActivity extends BasActivity {
                 .setLeftText("蓝牙助手")
                 .hideLeftIcon()
                 .setRightIcon()
-                .setLeftClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if (mStartDebug % 4 ==0){
-                            startActivity(DebugActivity.class);
-                        }
-                        mStartDebug++;
-                    }
-                })
                 .setRightClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {

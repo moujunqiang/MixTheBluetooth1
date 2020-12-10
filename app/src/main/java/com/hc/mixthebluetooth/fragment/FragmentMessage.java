@@ -2,6 +2,7 @@ package com.hc.mixthebluetooth.fragment;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Message;
 import android.text.Editable;
@@ -37,19 +38,15 @@ import java.util.List;
 public class FragmentMessage extends BasFragment {
 
 
-
-
-
-    @ViewByIds(value = {R.id.pull_message_fragment},name = {"mPullBT"})
+    @ViewByIds(value = {R.id.pull_message_fragment}, name = {"mPullBT"})
     private ImageView mPullBT;
 
-    @ViewByIds(value = {R.id.size_read_message_fragment,R.id.size_send_message_fragment,R.id.size_unsent_message_fragment}
-    ,name = {"mReadNumberTV","mSendNumberTv","mUnsentNumberTv"})
-    private TextView mReadNumberTV,mSendNumberTv,mUnsentNumberTv;
+    @ViewByIds(value = {R.id.size_read_message_fragment, R.id.size_send_message_fragment, R.id.size_unsent_message_fragment}
+            , name = {"mReadNumberTV", "mSendNumberTv", "mUnsentNumberTv"})
+    private TextView mReadNumberTV, mSendNumberTv, mUnsentNumberTv;
 
-    @ViewByIds(value = {R.id.read_hint_message_fragment,R.id.unsent_hint_message_fragment},name = {"mReadingHint","mUnsentHint"})
-    private LinearLayout mReadingHint,mUnsentHint;
-
+    @ViewByIds(value = {R.id.read_hint_message_fragment, R.id.unsent_hint_message_fragment}, name = {"mReadingHint", "mUnsentHint"})
+    private LinearLayout mReadingHint, mUnsentHint;
 
 
     private DefaultNavigationBar mTitle;//activity的头部
@@ -74,11 +71,13 @@ public class FragmentMessage extends BasFragment {
     private boolean isReadHex;
 
     @ViewById(R.id.tv_ir)
-    private TextView  tvIr;
+    private TextView tvIr;
     @ViewById(R.id.tv_avg)
     private TextView tvAvg;
     @ViewById(R.id.tv_bmp)
     private TextView tvBMp;
+    private CountDownTimer timer;
+
     @Override
     public int setFragmentViewId() {
         return R.layout.fragment_message;
@@ -103,7 +102,7 @@ public class FragmentMessage extends BasFragment {
     @Override
     public void updateState(int state) {
 
-        switch (state){
+        switch (state) {
             case CommunicationActivity.FRAGMENT_STATE_1:
                 mReadingHint.setVisibility(View.VISIBLE);
                 break;
@@ -113,36 +112,54 @@ public class FragmentMessage extends BasFragment {
         }
     }
 
-    private boolean isShowAlarm=false;
+    private boolean isShowAlarm = false;
+
     @Override
-    public void readData(int state,Object o, final byte[] data) {
-        switch (state){
+    public void readData(int state, Object o, final byte[] data) {
+        switch (state) {
             case CommunicationActivity.FRAGMENT_STATE_DATA:
                 if (module == null) {
                     module = (DeviceModule) o;
                 }
                 if (data != null) {
-                    String byteToString = Analysis.getByteToString(data, isReadHex);
-                    String[] split = byteToString.split(",");
-                    String ir = split[0].split("=")[1];
-                    String bmp = split[1].split("=")[1];
-                    tvIr.setText("血氧："+ir);
-                    tvBMp.setText("心率："+bmp);
-                    double i = Double.parseDouble(ir);//血氧
-                    double i1 = Double.parseDouble(bmp);//心率
-                //    int i2 = Integer.parseInt(avgbmp);
-                    if (i1>70||i<60||i>110){
-                        //跳转到提醒页面
-                        if (!isShowAlarm){//因为数据发送很频繁，所以先设定只提醒一次
-                            startActivity(new Intent(getContext(), AlarmActivity.class));
-                            isShowAlarm=true;
+                    timer = new CountDownTimer(Integer.MAX_VALUE, 2000) {
+                        @Override
+                        public void onTick(long millisUntilFinished) {
+                            String byteToString = Analysis.getByteToString(data, isReadHex);
+                            String[] split = byteToString.split(",");
+                            String ir = split[0].split("=")[1];
+                            String bmp = split[1].split("=")[1];
+                            String avgBmp = split[2].split("=")[1];
+
+                            tvIr.setText("血氧：" + ir);
+                            tvBMp.setText("平均心率：" + avgBmp);
+                            double i = Double.parseDouble(ir);//血氧
+                            double i1 = Double.parseDouble(bmp);//心率
+                            double i2 = Double.parseDouble(avgBmp);//平均心率
+                            if (i > 70 || i2 < 60 || i2 > 110) {
+                                if (isShowAlarm) {
+                                    new Handler().postDelayed(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            startActivity(new Intent(getContext(), AlarmActivity.class));
+                                        }
+                                    }, 10000);
+                                }
+
+                            }
                         }
 
-                    }
+                        @Override
+                        public void onFinish() {
+
+                        }
+                    };
+                    timer.start();
+
                 }
                 break;
             case CommunicationActivity.FRAGMENT_STATE_NUMBER:
-                mSendNumberTv.setText(String.valueOf(Integer.parseInt(mSendNumberTv.getText().toString())+((int) o)));
+                mSendNumberTv.setText(String.valueOf(Integer.parseInt(mSendNumberTv.getText().toString()) + ((int) o)));
                 setUnsentNumberTv();
                 break;
             case CommunicationActivity.FRAGMENT_STATE_SEND_SEND_TITLE:
@@ -152,9 +169,29 @@ public class FragmentMessage extends BasFragment {
 
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (timer != null) {
+            timer.cancel();
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        isShowAlarm = true;
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        isShowAlarm = false;
+    }
+
     @OnClick({R.id.pull_message_fragment})
-    private void onClick(View view){
-        switch (view.getId()){
+    private void onClick(View view) {
+        switch (view.getId()) {
 
 
             case R.id.pull_message_fragment:
@@ -182,7 +219,6 @@ public class FragmentMessage extends BasFragment {
     }
 
 
-
     private void setListState() {
         isShowMyData = mStorage.getData(PopWindowFragment.KEY_DATA);
         isShowTime = mStorage.getData(PopWindowFragment.KEY_TIME);
@@ -190,24 +226,18 @@ public class FragmentMessage extends BasFragment {
 
     }
 
-    private void setUnsentNumberTv(){
+    private void setUnsentNumberTv() {
         int number = Integer.parseInt(mSendNumberTv.getText().toString());
-        if ((mUnsentNumber-number)>2000){
+        if ((mUnsentNumber - number) > 2000) {
             if (mUnsentHint.getVisibility() == View.GONE)
                 mUnsentHint.setVisibility(View.VISIBLE);
-        }else if ((mUnsentNumber-number)<=0){
+        } else if ((mUnsentNumber - number) <= 0) {
             if (mUnsentHint.getVisibility() == View.VISIBLE)
                 mUnsentHint.setVisibility(View.GONE);
         }
         if (mUnsentHint.getVisibility() == View.VISIBLE)
-            mUnsentNumberTv.setText(String.valueOf(mUnsentNumber-number));
+            mUnsentNumberTv.setText(String.valueOf(mUnsentNumber - number));
     }
-
-
-
-
-
-
 
 
 }

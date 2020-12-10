@@ -122,9 +122,9 @@ public class FragmentMessage extends BasFragment {
                     module = (DeviceModule) o;
                 }
                 if (data != null) {
-                    timer = new CountDownTimer(Integer.MAX_VALUE, 2000) {
+                    new Handler().postDelayed(new Runnable() {
                         @Override
-                        public void onTick(long millisUntilFinished) {
+                        public void run() {
                             String byteToString = Analysis.getByteToString(data, isReadHex);
                             String[] split = byteToString.split(",");
                             String ir = split[0].split("=")[1];
@@ -148,13 +148,8 @@ public class FragmentMessage extends BasFragment {
 
                             }
                         }
+                    }, 2000);
 
-                        @Override
-                        public void onFinish() {
-
-                        }
-                    };
-                    timer.start();
 
                 }
                 break;

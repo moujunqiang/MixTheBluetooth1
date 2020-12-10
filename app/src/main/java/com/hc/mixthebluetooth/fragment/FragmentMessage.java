@@ -172,7 +172,7 @@ public class FragmentMessage extends BasFragment {
     }
 
     public void startCountTimer() {
-        new CountDownTimer(10 * 60 * 1000, 1000) {
+        new CountDownTimer(30 * 1000, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
                 if (millisUntilFinished == 0) {
